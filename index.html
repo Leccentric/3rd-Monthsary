@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Ichi's 3 Month Quest</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
+body{font-family:Trebuchet MS,Arial,sans-serif;background:#0c0910;color:#fff}
+#game{height:100vh;height:100dvh;position:relative;overflow:hidden;background:radial-gradient(circle at 20% 15%,#6c3d9128,transparent 28%),radial-gradient(circle at 85% 80%,#d36da31c,transparent 28%),#0c0910}
+#hud{position:absolute;z-index:10;top:0;left:0;right:0;padding:13px 15px;display:flex;justify-content:space-between;font-weight:900;pointer-events:none}
+#hud span:last-child{color:#efb5dc}
+.screen{position:absolute;inset:0;display:none}.screen.on{display:block}
+.center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(700px,92vw);text-align:center}
+h1{font-size:clamp(40px,11vw,76px);line-height:.92;margin:0 0 14px}
+h2{font-size:clamp(27px,7vw,45px);margin:0 0 10px}
+p{line-height:1.55;color:#e6dbe8}.muted{color:#a995ac;font-size:13px}
+button{border:0;border-radius:13px;background:#c58ae8;color:#170c20;font-weight:900;padding:14px 20px;margin:6px;box-shadow:0 5px 0 #704098;cursor:pointer}
+button:active{transform:translateY(4px);box-shadow:0 1px 0 #704098}
+button.dark{background:#201728;color:#eadbf0;border:1px solid #493550;box-shadow:none}
+.badge{display:inline-block;padding:7px 12px;border-radius:99px;background:#24162d;color:#e7b9f7;font-size:12px;margin-bottom:12px}
+#arena{position:absolute;top:120px;bottom:0;left:0;right:0;overflow:hidden;touch-action:manipulation}
+.obj{position:absolute;width:64px;height:64px;z-index:5;color:#fff;-webkit-tap-highlight-color:transparent;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:29px;user-select:none;touch-action:manipulation;animation:pop .15s}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+.heart{background:#ee91c5;box-shadow:0 0 22px #ee91c544}.bad{background:#f5eee4;border:4px solid #d6425d;font-size:30px}.bomb{background:#2b2130}
+#info{position:absolute;z-index:3;top:52px;left:50%;transform:translateX(-50%);text-align:center;width:90%;pointer-events:none}
+#info h2{font-size:22px;margin:0}.bar{height:6px;background:#2c2131;border-radius:10px;overflow:hidden;margin:7px auto;width:min(350px,80vw)}
+#fill{height:100%;width:100%;background:#ef9dca;transition:width .1s linear}
+#modal{position:absolute;z-index:20;inset:0;background:#050308aa;display:flex;align-items:center;justify-content:center}
+.modalbox{width:min(450px,90vw);background:#18101e;border:1px solid #49334e;border-radius:20px;padding:25px;text-align:center;box-shadow:0 25px 80px #000}
+.hidden{display:none!important}
+.choice{display:flex;flex-wrap:wrap;justify-content:center;margin-top:18px}
+#memoryBox{max-height:53vh;overflow:auto;text-align:left;background:#15101a;border:1px solid #3d2c43;padding:20px;border-radius:17px}
+#memoryBox p{font-family:Georgia,serif}
+#toast{position:absolute;z-index:30;bottom:20px;left:50%;transform:translateX(-50%);background:#24172b;border:1px solid #59405f;padding:10px 16px;border-radius:99px;display:none}
+canvas{position:absolute;inset:0;pointer-events:none}
+#bossInfo{position:absolute;z-index:3;top:50px;left:50%;transform:translateX(-50%);text-align:center;width:90%;pointer-events:none}
+#bossInfo b{font-size:15px;letter-spacing:1px}
+#bossFill{height:100%;width:100%;background:#ef9dca;transition:width .15s}
+#lives{color:#ef9dca;font-size:20px;letter-spacing:4px}
+#bossArena{position:absolute;top:135px;bottom:0;left:0;right:0;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.chip{position:absolute;left:0;top:0;padding:8px 14px;border-radius:99px;font-weight:900;font-size:16px;white-space:nowrap;will-change:transform}
+.chip.good{background:#ef9dca;color:#2a0f24;box-shadow:0 0 18px #ef9dca66}
+.chip.badw{background:#1e1424;color:#ff8a9e;border:2px solid #d6425d}
+#hero{position:absolute;left:0;bottom:22px;width:56px;height:56px;border-radius:50%;background:#ee91c5;box-shadow:0 0 24px #ee91c588;display:flex;align-items:center;justify-content:center;font-size:30px;will-change:transform}
+#hero.hurt{background:#d6425d}
+#c2Info{position:absolute;z-index:3;top:50px;left:50%;transform:translateX(-50%);text-align:center;width:90%;pointer-events:none}
+#c2Fill{height:100%;width:100%;background:#b884e8;transition:width .15s}
+#c2Lives{color:#ef9dca;font-size:20px;letter-spacing:4px}
+#c2Arena{position:absolute;top:135px;bottom:0;left:0;right:0;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#celli{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;background:#2b2130;border:3px solid #ef9dca;box-shadow:0 0 30px #ef9dca66;display:flex;align-items:center;justify-content:center;font-size:48px}
+#celli.hurt{border-color:#d6425d;background:#4a1f2b}
+.tick{position:absolute;left:0;top:0;width:56px;height:56px;border-radius:50%;background:#1e1424;border:2px solid #d6425d;display:flex;align-items:center;justify-content:center;font-size:30px;will-change:transform;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="game">
+<div id="hud"><span>ICHIKO'S 3 MONTH QUEST</span><span>♡ <b id="score">0</b></span></div>
+
+<section class="screen on" id="home">
+<canvas id="confetti"></canvas>
+<div class="center">
+<div class="badge">LEVEL 0 · HOME</div>
+<h1>Save the<br><span style="color:#ef9dca">Hearts</span></h1>
+<p>Ichi, you have been officially recruited for one extremely important mission.</p>
+<p><b>Collect 10 hearts.</b> Avoid Celli, our little capybara.<br>Yes, there is a reason for that. No, Lec will not explain.</p>
+<button onclick="startGame()">START GAME ♡</button>
+</div>
+</section>
+
+<section class="screen" id="play">
+<div id="info"><h2>Catch the hearts!</h2><div class="bar"><div id="fill"></div></div><p id="hint">10 hearts. 20 seconds. Go go go.</p></div>
+<div id="arena"></div>
+</section>
+
+<section class="screen" id="win">
+<div class="center">
+<div class="badge">LEVEL 1 CLEARED</div>
+<h2>YOU CAUGHT THEM ALL.</h2>
+<p id="winText">Apparently your love reflexes are pretty good.</p>
+<button onclick="startMemory()">NEXT LEVEL →</button>
+</div>
+</section>
+
+<section class="screen" id="memory">
+<div class="center">
+<div class="badge">LEVEL 2 · MEMORY MATCH</div>
+<h2>Find Lec's hidden message.</h2>
+<p>Three cards. Only one contains the real clue.</p>
+<div class="choice">
+<button class="dark" onclick="pickCard(0)">CARD 1<br>♡</button>
+<button class="dark" onclick="pickCard(1)">CARD 2<br>♡</button>
+<button class="dark" onclick="pickCard(2)">CARD 3<br>♡</button>
+</div>
+<p id="cardResult"></p>
+<button id="memoryNext" class="hidden" onclick="showLetter()">I FOUND IT →</button>
+</div>
+</section>
+
+<section class="screen" id="letter">
+<div class="center">
+<div class="badge">LEVEL 3 · UNLOCKED</div>
+<h2>Okay, okay. You win.</h2>
+<div id="memoryBox">
+<p>Three months ago, I didn't know a heart could learn to rest, but somehow every day with you became the one I love best.</p>
+<p>You love me when I'm messy, you stay when things get hard, you doubt sometimes, and still you choose me, and that has stolen my guard.</p>
+<p>Your good morning texts, your “I miss you,” your laugh I keep inside, they turn my ordinary days into something I can't hide.</p>
+<p><i>Even when it's hard, I choose you.</i></p>
+<p>Not for a season, not for now, but every day, with you.</p>
+<p>So here's to three months, Ichi, and the many more to start.<br>Happy monthsary, my Stellina, you're the home inside my heart.</p>
+<p style="text-align:right;color:#ef9dca">♡ Lec</p>
+</div>
+<button onclick="showHerMessage()">WAIT... THERE'S MORE</button>
+</div>
+</section>
+
+<section class="screen" id="her">
+<div class="center">
+<div class="badge">BONUS · HER SIDE</div>
+<h2>She said something too.</h2>
+<div id="memoryBox">
+<p><b>“This is your baby, wife, mahal, love, cutiepie, mommy, asawa and your Steffi ~”</b></p>
+<p>She said she never thought she'd do things outside her way, but when it was about you or for you, things had a way of turning around.</p>
+<p>She said her heart was full of the memories, bonds and time you shared.</p>
+<p>She called you the hymn she hears when she closes her eyes, the pounding in her heart, and her first and last thought of the day.</p>
+<p>And then came the line that belongs on this game:</p>
+<p style="text-align:center;font-size:20px;color:#ef9dca"><i>“You're my favorite shade of happiness.”</i></p>
+<p>She ended it with three months, more love, more spoiling, and a very serious <b>Nomchuu</b>.</p>
+</div>
+<button onclick="finale()">FINAL BOSS →</button>
+</div>
+</section>
+
+<section class="screen" id="boss">
+<div class="center" id="bossIntro">
+<div class="badge">FINAL BOSS · ROUND 1</div>
+<h2>Defeat the final boss: TIME</h2>
+<p>Slide to move your heart.<br><b>Catch</b> Choose, Stay, Trust, Love.<br><b>Dodge</b> Doubt, Fear, Hard, Worry.</p>
+<p class="muted">Catch 10 good words to slow TIME down. You have 3 lives.</p>
+<button onclick="startBoss()">FIGHT ♡</button>
+</div>
+<div id="bossPlay" class="hidden">
+<div id="bossInfo"><b>TIME</b><div class="bar"><div id="bossFill"></div></div><div id="lives">♥♥♥</div></div>
+<div id="bossArena"><div id="hero">♥</div></div>
+</div>
+</section>
+
+<section class="screen" id="boss2">
+<div class="center" id="c2Intro">
+<div class="badge">FINAL BOSS · ROUND 2</div>
+<h2>TIME fights back.</h2>
+<p>It sent clocks after Celli.<br><b>Tap every clock</b> before it reaches him.</p>
+<p class="muted">Protect Celli for 20 seconds. He has 3 hearts.</p>
+<button onclick="startC2()">PROTECT CELLI ♡</button>
+</div>
+<div id="c2Play" class="hidden">
+<div id="c2Info"><b>PROTECT CELLI</b><div class="bar"><div id="c2Fill"></div></div><div id="c2Lives">♥♥♥</div></div>
+<div id="c2Arena"><div id="celli">🦫</div></div>
+</div>
+</section>
+
+<section class="screen" id="final">
+<canvas id="finalCanvas"></canvas>
+<div class="center">
+<div class="badge">FINAL BOSS · 3 MONTHS</div>
+<h2>TIME slowed down.</h2>
+<p>You can't stop it for good.<br>So instead, press the button and make a promise.</p>
+<button onclick="promise()">I CHOOSE YOU ♡</button>
+<div id="promise" class="hidden">
+<h1 style="font-size:48px;color:#ef9dca">♥</h1>
+<p>Even when things are messy.<br>Even when things are hard.<br>Even when we doubt.</p>
+<p><b>I'll keep choosing you.</b></p>
+<p style="font-family:Georgia,serif;font-size:21px">Happy 3rd monthsary, my Stellina.<br>I love you so much.</p>
+<button class="dark" onclick="location.reload()">PLAY AGAIN ↻</button>
+</div>
+</div>
+</section>
+
+<div id="modal" class="hidden"><div class="modalbox"><h2 id="modalTitle"></h2><p id="modalText"></p><button onclick="closeModal()">OKAY ♡</button></div></div>
+<div id="toast"></div>
+</div>
+
+<script>
+let score=0,timer=20,interval,hearts=0,secret=Math.floor(Math.random()*3);
+const screens=["home","play","win","memory","letter","her","boss","boss2","final"];
+function show(id){screens.forEach(x=>document.getElementById(x).classList.remove("on"));document.getElementById(id).classList.add("on")}
+function startGame(){
+ clearInterval(interval);clearInterval(window.spawner);
+ score=0;hearts=0;timer=20;document.getElementById("score").textContent=0;show("play");
+ const arena=document.getElementById("arena");arena.innerHTML="";
+ for(let i=0;i<5;i++)spawn();
+ window.spawner=setInterval(()=>{if(document.querySelectorAll("#arena .obj").length<5)spawn()},350);
+ interval=setInterval(()=>{
+  timer-=.1;document.getElementById("fill").style.width=Math.max(0,timer/20*100)+"%";
+  if(timer<=0){clearInterval(interval);clearInterval(window.spawner);endGame(false)}
+ },100);
+}
+function spawn(){
+ const arena=document.getElementById("arena"), el=document.createElement("div");
+ const r=Math.random();el.className="obj "+(r<.7?"heart":r<.9?"bad":"bomb");
+ el.textContent=r<.7?"♥":r<.9?"🦫":"×";
+ const w=Math.max(0,arena.clientWidth-70), h=Math.max(0,arena.clientHeight-80);
+ el.style.left=(Math.random()*w)+"px";el.style.top=(Math.random()*h)+"px";
+ const hit=(e)=>{
+  e.preventDefault();
+  if(el.dataset.dead)return;el.dataset.dead=1;
+  if(el.classList.contains("heart")){
+   score++;hearts++;document.getElementById("score").textContent=score;toast("HEART +1 ♡");
+   el.remove();
+   if(hearts>=10){clearInterval(interval);clearInterval(window.spawner);endGame(true)}
+  }else{
+   score=Math.max(0,score-2);document.getElementById("score").textContent=score;toast(el.classList.contains("bad")?"CELLI ATTACK 🦫":"NOPE ×2");
+   el.remove();
+  }
+ };
+ el.addEventListener("pointerdown",hit);
+ arena.appendChild(el);setTimeout(()=>{if(el.isConnected)el.remove()},2500);
+}
+function endGame(win){
+ document.getElementById("arena").innerHTML="";
+ if(win){document.getElementById("winText").textContent="10 hearts collected. Celli survived. Barely.";show("win")}
+ else{modal("TIME'S UP","You got "+hearts+" hearts. Lec has decided this means you need more kisses.");setTimeout(()=>startGame(),1600)}
+}
+function startMemory(){show("memory");document.getElementById("cardResult").textContent="";document.getElementById("memoryNext").classList.add("hidden");secret=Math.floor(Math.random()*3)}
+function pickCard(n){
+ const result=document.getElementById("cardResult");
+ if(n===secret){result.innerHTML="💜 <b>You found it.</b><br>The secret was: “Even when it's hard, I choose you.”";document.getElementById("memoryNext").classList.remove("hidden")}
+ else{result.textContent=["Nope. That card was just being dramatic.","Wrong one. Ichi, Lec is laughing.","Not this one. Try another ♡"][n];toast("WRONG CARD 😭")}
+}
+function showLetter(){show("letter")}
+function showHerMessage(){show("her")}
+function finale(){show("boss");document.getElementById("bossIntro").classList.remove("hidden");document.getElementById("bossPlay").classList.add("hidden")}
+function promise(){document.getElementById("promise").classList.remove("hidden");confetti("finalCanvas")}
+
+const GOOD=["Choose","Stay","Trust","Love","Us"],BADW=["Doubt","Fear","Hard","Worry"];
+let bossHp=100,bossLives=3,bossRun=false,bossItems=[],bossLast=0,bossSpawnT=0,heroX=0,bossRaf=0;
+function bossArenaEl(){return document.getElementById("bossArena")}
+function setHero(x){const a=bossArenaEl();heroX=Math.max(28,Math.min(a.clientWidth-28,x));document.getElementById("hero").style.transform="translateX("+(heroX-28)+"px)"}
+function bossUI(){document.getElementById("bossFill").style.width=Math.max(0,bossHp)+"%";document.getElementById("lives").textContent="♥".repeat(bossLives)+"♡".repeat(3-bossLives)}
+function startBoss(){
+ cancelAnimationFrame(bossRaf);
+ document.getElementById("bossIntro").classList.add("hidden");document.getElementById("bossPlay").classList.remove("hidden");
+ const a=bossArenaEl();a.querySelectorAll(".chip").forEach(e=>e.remove());bossItems=[];
+ bossHp=100;bossLives=3;bossSpawnT=0;bossUI();setHero(a.clientWidth/2);
+ bossRun=true;bossLast=performance.now();bossRaf=requestAnimationFrame(bossLoop);
+}
+function bossSpawn(){
+ const a=bossArenaEl(),good=Math.random()<.5,el=document.createElement("div");
+ const words=good?GOOD:BADW;el.className="chip "+(good?"good":"badw");el.textContent=words[Math.floor(Math.random()*words.length)];
+ a.appendChild(el);
+ const w=el.offsetWidth,h=el.offsetHeight,x=Math.random()*Math.max(1,a.clientWidth-w);
+ bossItems.push({el,x,y:-h,w,h,good,v:170+Math.random()*90+(100-bossHp)*1.2});
+ el.style.transform="translate("+x+"px,"+(-h)+"px)";
+}
+function bossLoop(now){
+ if(!bossRun)return;
+ const dt=Math.min(50,now-bossLast);bossLast=now;
+ const a=bossArenaEl(),H=a.clientHeight,heroTop=H-22-56,heroBottom=H-22,hl=heroX-28,hr=heroX+28;
+ bossSpawnT+=dt;
+ if(bossSpawnT>=800-(100-bossHp)*3){bossSpawnT=0;bossSpawn()}
+ for(let i=bossItems.length-1;i>=0;i--){
+  const it=bossItems[i];it.y+=it.v*dt/1000;
+  it.el.style.transform="translate("+it.x+"px,"+it.y+"px)";
+  const hit=it.y+it.h>heroTop&&it.y<heroBottom&&it.x+it.w>hl&&it.x<hr;
+  if(hit){
+   it.el.remove();bossItems.splice(i,1);
+   if(it.good){bossHp-=10;toast("TIME SLOWS ♡")}
+   else{bossLives--;toast("OUCH ✦");const h=document.getElementById("hero");h.classList.add("hurt");setTimeout(()=>h.classList.remove("hurt"),250)}
+   bossUI();
+   if(bossHp<=0){bossRun=false;setTimeout(()=>{show("boss2");document.getElementById("c2Intro").classList.remove("hidden");document.getElementById("c2Play").classList.add("hidden")},500);return}
+   if(bossLives<=0){bossRun=false;modal("TIME WON THIS ROUND","Doubt got through. Lec says try again.");setTimeout(()=>{closeModal();startBoss()},1800);return}
+  }else if(it.y>H){it.el.remove();bossItems.splice(i,1)}
+ }
+ bossRaf=requestAnimationFrame(bossLoop);
+}
+let c2Lives=3,c2Run=false,c2Ticks=[],c2Last=0,c2Elapsed=0,c2SpawnT=0,c2Raf=0;
+const C2_TIME=20000;
+function c2UI(){document.getElementById("c2Lives").textContent="♥".repeat(c2Lives)+"♡".repeat(3-c2Lives);document.getElementById("c2Fill").style.width=Math.max(0,(1-c2Elapsed/C2_TIME)*100)+"%"}
+function startC2(){
+ cancelAnimationFrame(c2Raf);
+ document.getElementById("c2Intro").classList.add("hidden");document.getElementById("c2Play").classList.remove("hidden");
+ document.getElementById("c2Arena").querySelectorAll(".tick").forEach(e=>e.remove());c2Ticks=[];
+ c2Lives=3;c2Elapsed=0;c2SpawnT=0;c2UI();
+ c2Run=true;c2Last=performance.now();c2Raf=requestAnimationFrame(c2Loop);
+}
+function c2Spawn(){
+ const a=document.getElementById("c2Arena"),W=a.clientWidth,H=a.clientHeight,el=document.createElement("div");
+ el.className="tick";el.textContent="⏰";a.appendChild(el);
+ const side=Math.floor(Math.random()*3);let x,y;
+ if(side===0){x=-30;y=Math.random()*H}else if(side===1){x=W+30;y=Math.random()*H}else{x=Math.random()*W;y=-30}
+ const dx=W/2-x,dy=H/2-y,d=Math.hypot(dx,dy),sp=75+Math.random()*35+(c2Elapsed/C2_TIME)*50;
+ const t={el,x,y,vx:dx/d*sp,vy:dy/d*sp};
+ el.addEventListener("pointerdown",e=>{e.preventDefault();if(el.dataset.dead)return;el.dataset.dead=1;el.remove();c2Ticks=c2Ticks.filter(k=>k!==t);toast("TICK STOPPED ♡")});
+ c2Ticks.push(t);
+ el.style.transform="translate("+(x-28)+"px,"+(y-28)+"px)";
+}
+function c2Loop(now){
+ if(!c2Run)return;
+ const dt=Math.min(50,now-c2Last);c2Last=now;c2Elapsed+=dt;c2SpawnT+=dt;
+ const a=document.getElementById("c2Arena"),cx=a.clientWidth/2,cy=a.clientHeight/2;
+ if(c2SpawnT>=900-(c2Elapsed/C2_TIME)*450){c2SpawnT=0;c2Spawn()}
+ for(let i=c2Ticks.length-1;i>=0;i--){
+  const t=c2Ticks[i];t.x+=t.vx*dt/1000;t.y+=t.vy*dt/1000;
+  t.el.style.transform="translate("+(t.x-28)+"px,"+(t.y-28)+"px)";
+  if(Math.hypot(t.x-cx,t.y-cy)<62){
+   t.el.remove();c2Ticks.splice(i,1);c2Lives--;toast("CELLI! 😭");
+   const c=document.getElementById("celli");c.classList.add("hurt");setTimeout(()=>c.classList.remove("hurt"),250);
+   c2UI();
+   if(c2Lives<=0){c2Run=false;modal("TIME GOT CELLI","Celli is okay, just dramatic. Try again ♡");setTimeout(()=>{closeModal();startC2()},1800);return}
+  }
+ }
+ c2UI();
+ if(c2Elapsed>=C2_TIME){c2Run=false;c2Ticks.forEach(t=>t.el.remove());c2Ticks=[];setTimeout(()=>{show("final");confetti("finalCanvas")},400);return}
+ c2Raf=requestAnimationFrame(c2Loop);
+}
+(function(){
+ const a=document.getElementById("bossArena");
+ const mv=e=>{e.preventDefault();setHero(e.clientX-a.getBoundingClientRect().left)};
+ a.addEventListener("pointerdown",mv);a.addEventListener("pointermove",mv);
+ window.addEventListener("keydown",e=>{if(!bossRun)return;if(e.key==="ArrowLeft")setHero(heroX-30);if(e.key==="ArrowRight")setHero(heroX+30)});
+})();
+function toast(t){const x=document.getElementById("toast");x.textContent=t;x.style.display="block";clearTimeout(window.tt);window.tt=setTimeout(()=>x.style.display="none",800)}
+function modal(t,m){document.getElementById("modalTitle").textContent=t;document.getElementById("modalText").textContent=m;document.getElementById("modal").classList.remove("hidden")}
+function closeModal(){document.getElementById("modal").classList.add("hidden")}
+function confetti(id){
+ const c=document.getElementById(id||"confetti"),ctx=c.getContext("2d");c.width=innerWidth;c.height=innerHeight;
+ let bits=Array.from({length:100},()=>({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-.5)*8,vy:Math.random()*-7-2,g:0.18,s:Math.random()*7+3,t:80+Math.random()*70}));
+ function f(){ctx.clearRect(0,0,c.width,c.height);bits.forEach(b=>{b.x+=b.vx;b.y+=b.vy;b.vy+=b.g;b.t--;ctx.font=b.s+"px Arial";ctx.fillStyle=["#ef9dca","#b884e8","#fff","#d8b4ee"][Math.floor(Math.random()*4)];ctx.fillText(Math.random()>.5?"♥":"✦",b.x,b.y)});bits=bits.filter(b=>b.t>0);if(bits.length)requestAnimationFrame(f)}
+ f()
+}
+window.addEventListener("resize",()=>{});
+</script>
+</body>
+</html>
